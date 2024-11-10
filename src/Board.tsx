@@ -1,0 +1,78 @@
+import React, { ReactNode, useMemo } from "react";
+import styled from "styled-components";
+import { palette } from "./palette";
+import { useDrop } from "react-dnd";
+import { DragItemTypes, PieceData } from "./Piece";
+
+export const tilesWide = 5;
+export const tilesHigh = 5;
+export const gridGap = 0;
+export const tileSize = 96;
+
+const StyledTile = styled.div<{ $color }>`
+  width: ${tileSize}px;
+  height: ${tileSize}px;
+  background-color: ${(props) => props.$color};
+`;
+
+const Tile = ({ color, movePiece }) => {
+  const [{ isOver }, dropRef] = useDrop(() => ({
+    accept: DragItemTypes.PIECE,
+    drop: (item: { data: PieceData }) => {
+      movePiece(item.data.id);
+    },
+    collect: (monitor) => ({
+      isOver: !!monitor.isOver(),
+    }),
+  }));
+
+  return <StyledTile ref={dropRef} $color={isOver ? palette.GRAY : color} />;
+};
+
+const StyledBaseGrid = styled.div`
+  display: grid;
+  grid-gap: ${gridGap}px;
+  grid-template-columns: ${tileSize}px ${tileSize}px ${tileSize}px ${tileSize}px ${tileSize}px;
+  grid-template-rows: ${tileSize}px ${tileSize}px ${tileSize}px ${tileSize}px ${tileSize}px;
+
+  width: ${tileSize * tilesWide + (tilesWide - 1) * gridGap}px;
+  height: ${tileSize * tilesHigh + (tilesHigh - 1) * gridGap}px;
+`;
+
+export const StyledGrid = styled(StyledBaseGrid)`
+  border: 4px solid black;
+  /* padding: 8px; */
+`;
+
+export const Grid = ({ movePiece }) => {
+  const tiles = useMemo(() => {
+    const innerTiles: ReactNode[] = [];
+    const tileCount = tilesWide * tilesHigh;
+    for (let i = 0; i < tileCount; i += 1) {
+      const isEven = i % 2 === 0;
+      const row = Math.floor(i / tilesWide);
+      const col = i % tilesWide;
+      innerTiles.push(
+        <Tile
+          key={i}
+          movePiece={(id: string) => movePiece(id, { row, col })}
+          color={isEven ? palette.PARCHMENT : palette.ORANGE}
+        />
+      );
+    }
+    return innerTiles;
+  }, []);
+
+  return <StyledGrid>{tiles}</StyledGrid>;
+};
+
+export const Board = ({ children, movePiece }) => {
+  return (
+    <div>
+      <StyledBaseGrid style={{ position: "absolute", pointerEvents: "none" }}>
+        {children}
+      </StyledBaseGrid>
+      <Grid movePiece={movePiece} />
+    </div>
+  );
+};
