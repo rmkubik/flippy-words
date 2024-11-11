@@ -98,7 +98,7 @@ export const Piece = ({ children, data }) => {
          * doesn't seem to have a built in way to support this so
          * we hacked it in.
          */
-        pointerEvents: isAnyPieceDragging ? "none" : undefined,
+        pointerEvents: isAnyPieceDragging && !isDragging ? "none" : undefined,
       }}
       ref={dragRef}
       $tilesWide={data.dimensions.width}
