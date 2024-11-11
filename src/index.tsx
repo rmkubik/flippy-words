@@ -6,6 +6,7 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { createGlobalStyle } from "styled-components";
 import { palette } from "./palette";
+import { Tray } from "./Tray";
 
 const GlobalStyle = createGlobalStyle`
   body {
@@ -15,12 +16,14 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 const App = () => {
-  const { pieces, movePiece } = usePieces();
+  const { boardPieces, trayPieces, movePiece } = usePieces();
+
   return (
     <>
       <GlobalStyle />
       <DndProvider backend={HTML5Backend}>
-        <Board movePiece={movePiece}>{pieces}</Board>
+        <Board movePiece={movePiece}>{boardPieces}</Board>
+        <Tray movePiece={movePiece}>{trayPieces}</Tray>
       </DndProvider>
     </>
   );

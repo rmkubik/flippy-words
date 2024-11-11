@@ -51,6 +51,7 @@ const StyledPiece = styled.div<{
    */
   &:active {
     cursor: grab;
+    transform: rotate(${(props) => props.$rotation}deg);
   }
 `;
 
@@ -102,8 +103,8 @@ export const Piece = ({ children, data }) => {
       ref={dragRef}
       $tilesWide={data.dimensions.width}
       $tilesHigh={data.dimensions.height}
-      $row={data.location.row}
-      $col={data.location.col}
+      $row={data.location?.row ?? 0}
+      $col={data.location?.col ?? 0}
       $rotation={rotation}
       onDoubleClick={() => {
         setRotation((rotation + 90) % 360);
@@ -207,22 +208,40 @@ export const usePieces = () => {
     () => startingPieces
   );
 
-  const pieces = useMemo(() => {
-    return piecesData.map((data) => {
-      return (
-        <Piece key={data.id} data={data}>
-          <Piece.Top>{data.words.top}</Piece.Top>
-          <Piece.Bottom>{data.words.bottom}</Piece.Bottom>
-          <Piece.Left>{data.words.left}</Piece.Left>
-          <Piece.Right>{data.words.right}</Piece.Right>
-        </Piece>
-      );
-    });
+  const { boardPieces, trayPieces } = useMemo(() => {
+    const boardPieces = piecesData
+      .filter((data) => data.location !== null)
+      .map((data) => {
+        return (
+          <Piece key={data.id} data={data}>
+            <Piece.Top>{data.words.top}</Piece.Top>
+            <Piece.Bottom>{data.words.bottom}</Piece.Bottom>
+            <Piece.Left>{data.words.left}</Piece.Left>
+            <Piece.Right>{data.words.right}</Piece.Right>
+          </Piece>
+        );
+      });
+    const trayPieces = piecesData
+      .filter((data) => data.location === null)
+      .map((data) => {
+        return (
+          <Piece key={data.id} data={data}>
+            <Piece.Top>{data.words.top}</Piece.Top>
+            <Piece.Bottom>{data.words.bottom}</Piece.Bottom>
+            <Piece.Left>{data.words.left}</Piece.Left>
+            <Piece.Right>{data.words.right}</Piece.Right>
+          </Piece>
+        );
+      });
+
+    return { boardPieces, trayPieces };
   }, [piecesData]);
 
   const movePiece = (pieceId, newLocation) => {
     setPiecesData((prevData) => {
       const pieceDataIndex = prevData.findIndex((data) => data.id === pieceId);
+
+      console.log({ pieceId, newLocation });
 
       if (pieceDataIndex === -1)
         throw new Error(`Piece doesn't have data. ${pieceId}`);
@@ -236,5 +255,5 @@ export const usePieces = () => {
     });
   };
 
-  return { pieces, movePiece };
+  return { boardPieces, trayPieces, movePiece };
 };
