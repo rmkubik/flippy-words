@@ -2,8 +2,6 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { Board } from "./Board";
 import { Piece, usePieces } from "./Piece";
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
 import { createGlobalStyle } from "styled-components";
 import { palette } from "./palette";
 import { Tray } from "./Tray";
@@ -21,10 +19,8 @@ const App = () => {
   return (
     <>
       <GlobalStyle />
-      <DndProvider backend={HTML5Backend}>
-        <Board movePiece={movePiece}>{boardPieces}</Board>
-        <Tray movePiece={movePiece}>{trayPieces}</Tray>
-      </DndProvider>
+      <Board movePiece={movePiece}>{boardPieces}</Board>
+      <Tray movePiece={movePiece}>{trayPieces}</Tray>
     </>
   );
 };

@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
-import { gridGap, tileSize } from "./Board";
-import { useDrag, useDragDropManager } from "react-dnd";
+import { gridGap, tilesHigh, tileSize, tilesWide } from "./Board";
 import { palette } from "./palette";
 import { v4 as uuid } from "uuid";
 import { update } from "./arrays";
+import Draggable from "react-draggable";
+import { clamp } from "./numbers";
 
-export const pieceInnerMargin = 8;
+export const pieceInnerMargin = 4;
 
 export const DragItemTypes = {
   PIECE: "piece",
@@ -22,11 +23,11 @@ const StyledPiece = styled.div<{
   width: ${(props) =>
     props.$tilesWide * tileSize +
     (props.$tilesWide - 1) * gridGap -
-    pieceInnerMargin}px;
+    pieceInnerMargin * 2}px;
   height: ${(props) =>
     props.$tilesHigh * tileSize +
     (props.$tilesHigh - 1) * gridGap -
-    pieceInnerMargin}px;
+    pieceInnerMargin * 2}px;
 
   background-color: ${palette.OFF_WHITE};
   grid-column: span ${(props) => props.$tilesWide};
@@ -42,7 +43,7 @@ const StyledPiece = styled.div<{
   font-weight: bold;
 
   transform-origin: center;
-  transform: rotate(${(props) => props.$rotation}deg);
+  transform: rotate(${(props) => props.$rotation}deg); // translate(-50%);
 
   margin: ${pieceInnerMargin}px;
 
@@ -55,63 +56,53 @@ const StyledPiece = styled.div<{
   }
 `;
 
-export const Piece = ({ children, data }) => {
-  const dragDropManager = useDragDropManager();
+export const Piece = ({ children, data, movePiece }) => {
   const [isAnyPieceDragging, setIsAnyPieceDragging] = useState(false);
   const [rotation, setRotation] = useState(0);
-  const [{ isDragging }, dragRef] = useDrag(() => ({
-    type: DragItemTypes.PIECE,
-    item: { data },
-    collect: (monitor) => ({
-      isDragging: !!monitor.isDragging(),
-    }),
-  }));
-
-  useEffect(() => {
-    const unsubscribe = dragDropManager
-      .getMonitor()
-      .subscribeToStateChange(() => {
-        /**
-         * HACK:
-         * Reacting to global dragging piece instantly prevents
-         * the drag from occurring. We add a setTimeout(0) here to
-         * defer this pointer-events disable so it still allows this
-         * element to be dragged.
-         */
-        setTimeout(
-          () =>
-            setIsAnyPieceDragging(dragDropManager.getMonitor().isDragging()),
-          0
-        );
-      });
-
-    return unsubscribe;
-  }, [dragDropManager]);
+  const isDragging = false;
 
   return (
-    <StyledPiece
-      style={{
-        opacity: isDragging ? 0.5 : 1,
-        cursor: isDragging ? "grabbing" : "grab",
-        /**
-         * Prevent any pieces from blocking drop events. ReactDND
-         * doesn't seem to have a built in way to support this so
-         * we hacked it in.
-         */
-        pointerEvents: isAnyPieceDragging && !isDragging ? "none" : undefined,
+    <Draggable
+      onStop={(event, { x, y }) => {
+        const row = Math.floor((x + pieceInnerMargin) / tileSize);
+        const col = Math.floor((y + pieceInnerMargin) / tileSize);
+
+        movePiece(data.id, {
+          row: clamp(row, 0, tilesHigh),
+          col: clamp(col, 0, tilesWide),
+        });
       }}
-      ref={dragRef}
-      $tilesWide={data.dimensions.width}
-      $tilesHigh={data.dimensions.height}
-      $row={data.location?.row ?? 0}
-      $col={data.location?.col ?? 0}
-      $rotation={rotation}
-      onDoubleClick={() => {
-        setRotation((rotation + 90) % 360);
+      position={{
+        x: data.location.row * tileSize,
+        y: data.location.col * tileSize,
       }}
     >
-      {children}
-    </StyledPiece>
+      <div style={{ position: "absolute" }}>
+        <StyledPiece
+          style={{
+            opacity: isDragging ? 0.5 : 1,
+            cursor: isDragging ? "grabbing" : "grab",
+            /**
+             * Prevent any pieces from blocking drop events. ReactDND
+             * doesn't seem to have a built in way to support this so
+             * we hacked it in.
+             */
+            pointerEvents:
+              isAnyPieceDragging && !isDragging ? "none" : undefined,
+          }}
+          $tilesWide={data.dimensions.width}
+          $tilesHigh={data.dimensions.height}
+          $row={data.location?.row ?? 0}
+          $col={data.location?.col ?? 0}
+          $rotation={rotation}
+          onDoubleClick={() => {
+            setRotation((rotation + 90) % 360);
+          }}
+        >
+          {children}
+        </StyledPiece>
+      </div>
+    </Draggable>
   );
 };
 
@@ -208,35 +199,6 @@ export const usePieces = () => {
     () => startingPieces
   );
 
-  const { boardPieces, trayPieces } = useMemo(() => {
-    const boardPieces = piecesData
-      .filter((data) => data.location !== null)
-      .map((data) => {
-        return (
-          <Piece key={data.id} data={data}>
-            <Piece.Top>{data.words.top}</Piece.Top>
-            <Piece.Bottom>{data.words.bottom}</Piece.Bottom>
-            <Piece.Left>{data.words.left}</Piece.Left>
-            <Piece.Right>{data.words.right}</Piece.Right>
-          </Piece>
-        );
-      });
-    const trayPieces = piecesData
-      .filter((data) => data.location === null)
-      .map((data) => {
-        return (
-          <Piece key={data.id} data={data}>
-            <Piece.Top>{data.words.top}</Piece.Top>
-            <Piece.Bottom>{data.words.bottom}</Piece.Bottom>
-            <Piece.Left>{data.words.left}</Piece.Left>
-            <Piece.Right>{data.words.right}</Piece.Right>
-          </Piece>
-        );
-      });
-
-    return { boardPieces, trayPieces };
-  }, [piecesData]);
-
   const movePiece = (pieceId, newLocation) => {
     setPiecesData((prevData) => {
       const pieceDataIndex = prevData.findIndex((data) => data.id === pieceId);
@@ -254,6 +216,35 @@ export const usePieces = () => {
       return newData;
     });
   };
+
+  const { boardPieces, trayPieces } = useMemo(() => {
+    const boardPieces = piecesData
+      .filter((data) => data.location !== null)
+      .map((data) => {
+        return (
+          <Piece key={data.id} data={data} movePiece={movePiece}>
+            <Piece.Top>{data.words.top}</Piece.Top>
+            <Piece.Bottom>{data.words.bottom}</Piece.Bottom>
+            <Piece.Left>{data.words.left}</Piece.Left>
+            <Piece.Right>{data.words.right}</Piece.Right>
+          </Piece>
+        );
+      });
+    const trayPieces = piecesData
+      .filter((data) => data.location === null)
+      .map((data) => {
+        return (
+          <Piece key={data.id} data={data} movePiece={movePiece}>
+            <Piece.Top>{data.words.top}</Piece.Top>
+            <Piece.Bottom>{data.words.bottom}</Piece.Bottom>
+            <Piece.Left>{data.words.left}</Piece.Left>
+            <Piece.Right>{data.words.right}</Piece.Right>
+          </Piece>
+        );
+      });
+
+    return { boardPieces, trayPieces };
+  }, [piecesData]);
 
   return { boardPieces, trayPieces, movePiece };
 };

@@ -1,13 +1,13 @@
 import React, { ReactNode, useMemo } from "react";
 import styled from "styled-components";
 import { palette } from "./palette";
-import { useDrop } from "react-dnd";
 import { DragItemTypes, PieceData } from "./Piece";
 
 export const tilesWide = 5;
 export const tilesHigh = 5;
 export const gridGap = 0;
 export const tileSize = 96;
+export const borderWidth = 4;
 
 const StyledTile = styled.div<{ $color }>`
   width: ${tileSize}px;
@@ -16,17 +16,7 @@ const StyledTile = styled.div<{ $color }>`
 `;
 
 const Tile = ({ color, movePiece }) => {
-  const [{ isOver }, dropRef] = useDrop(() => ({
-    accept: DragItemTypes.PIECE,
-    drop: (item: { data: PieceData }) => {
-      movePiece(item.data.id);
-    },
-    collect: (monitor) => ({
-      isOver: !!monitor.isOver(),
-    }),
-  }));
-
-  return <StyledTile ref={dropRef} $color={isOver ? palette.GRAY : color} />;
+  return <StyledTile $color={color} />;
 };
 
 const StyledBaseGrid = styled.div`
@@ -40,7 +30,7 @@ const StyledBaseGrid = styled.div`
 `;
 
 export const StyledGrid = styled(StyledBaseGrid)`
-  border: 4px solid black;
+  border: ${borderWidth}px solid black;
   /* padding: 8px; */
 `;
 
@@ -68,8 +58,14 @@ export const Grid = ({ movePiece }) => {
 
 export const Board = ({ children, movePiece }) => {
   return (
-    <div>
-      <StyledBaseGrid style={{ position: "absolute", pointerEvents: "none" }}>
+    <div style={{ width: "fit-content" }}>
+      <StyledBaseGrid
+        style={{
+          position: "absolute",
+          pointerEvents: "none",
+          margin: `${borderWidth}px`,
+        }}
+      >
         {children}
       </StyledBaseGrid>
       <Grid movePiece={movePiece} />
