@@ -141,8 +141,8 @@ export const Piece = ({ children, data, movePiece, rotatePiece }) => {
         setIsDragging(false);
       }}
       position={{
-        x: data.location.col * tileSize,
-        y: data.location.row * tileSize,
+        x: (data.location?.col ?? 0) * tileSize,
+        y: (data.location?.row ?? 0) * tileSize,
       }}
     >
       <div style={{ position: "absolute" }}>
@@ -206,7 +206,7 @@ export type PieceData = {
   location: {
     row: number;
     col: number;
-  };
+  } | null;
   dimensions: {
     width: number;
     height: number;
@@ -228,7 +228,6 @@ export type PieceData = {
  * for movement doesn't support wider pieces
  * correctly.
  */
-
 const startingPieces: PieceData[] = [
   {
     id: uuid(),
@@ -298,14 +297,23 @@ export const usePieces = () => {
       if (pieceDataIndex === -1)
         throw new Error(`Piece doesn't have data. ${pieceId}`);
 
-      const clampedLocation = clampPieceLocationToBounds(
-        newLocation,
-        prevData[pieceDataIndex]
-      );
+      // if (newLocation.row >= tilesHigh) {
+      //   // dragged off the bottom of the grid
+
+      //   return update(prevData, pieceDataIndex, {
+      //     ...prevData[pieceDataIndex],
+      //     location: null,
+      //   });
+      // }
+
+      // const clampedLocation = clampPieceLocationToBounds(
+      //   newLocation,
+      //   prevData[pieceDataIndex]
+      // );
 
       const newData = update(prevData, pieceDataIndex, {
         ...prevData[pieceDataIndex],
-        location: clampedLocation,
+        location: newLocation,
       });
 
       return newData;
@@ -324,13 +332,13 @@ export const usePieces = () => {
       if (pieceDataIndex === -1)
         throw new Error(`Piece doesn't have data. ${pieceId}`);
 
-      const clampedLocation = clampPieceLocationToBounds(
-        prevData[pieceDataIndex].location,
-        {
-          ...prevData[pieceDataIndex],
-          rotation: newRotation,
-        }
-      );
+      // const clampedLocation = clampPieceLocationToBounds(
+      //   prevData[pieceDataIndex].location,
+      //   {
+      //     ...prevData[pieceDataIndex],
+      //     rotation: newRotation,
+      //   }
+      // );
 
       const newData = update(prevData, pieceDataIndex, {
         ...prevData[pieceDataIndex],

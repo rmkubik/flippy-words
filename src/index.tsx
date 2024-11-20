@@ -2,9 +2,18 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { Board } from "./Board";
 import { Piece, usePieces } from "./Piece";
-import { createGlobalStyle } from "styled-components";
+import styled, { createGlobalStyle } from "styled-components";
 import { palette } from "./palette";
 import { Tray } from "./Tray";
+
+const Container = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  height: 100vh;
+  width: 100vw;
+  padding: 64px;
+`;
 
 const GlobalStyle = createGlobalStyle`
   body {
@@ -19,8 +28,10 @@ const App = () => {
   return (
     <>
       <GlobalStyle />
-      <Board>{boardPieces}</Board>
-      <Tray>{trayPieces}</Tray>
+      <Container>
+        <Board>{boardPieces}</Board>
+      </Container>
+      {/* <Tray>{trayPieces}</Tray> */}
     </>
   );
 };
