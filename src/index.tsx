@@ -14,13 +14,13 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 const App = () => {
-  const { boardPieces, trayPieces, movePiece } = usePieces();
+  const { boardPieces, trayPieces } = usePieces();
 
   return (
     <>
       <GlobalStyle />
-      <Board movePiece={movePiece}>{boardPieces}</Board>
-      <Tray movePiece={movePiece}>{trayPieces}</Tray>
+      <Board>{boardPieces}</Board>
+      <Tray>{trayPieces}</Tray>
     </>
   );
 };

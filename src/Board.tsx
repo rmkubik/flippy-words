@@ -1,7 +1,6 @@
 import React, { ReactNode, useMemo } from "react";
 import styled from "styled-components";
 import { palette } from "./palette";
-import { DragItemTypes, PieceData } from "./Piece";
 
 export const tilesWide = 5;
 export const tilesHigh = 5;
@@ -15,7 +14,7 @@ const StyledTile = styled.div<{ $color }>`
   background-color: ${(props) => props.$color};
 `;
 
-const Tile = ({ color, movePiece }) => {
+const Tile = ({ color }) => {
   return <StyledTile $color={color} />;
 };
 
@@ -34,7 +33,7 @@ export const StyledGrid = styled(StyledBaseGrid)`
   /* padding: 8px; */
 `;
 
-export const Grid = ({ movePiece }) => {
+export const Grid = () => {
   const tiles = useMemo(() => {
     const innerTiles: ReactNode[] = [];
     const tileCount = tilesWide * tilesHigh;
@@ -43,11 +42,7 @@ export const Grid = ({ movePiece }) => {
       const row = Math.floor(i / tilesWide);
       const col = i % tilesWide;
       innerTiles.push(
-        <Tile
-          key={i}
-          movePiece={(id: string) => movePiece(id, { row, col })}
-          color={isEven ? palette.PARCHMENT : palette.ORANGE}
-        />
+        <Tile key={i} color={isEven ? palette.PARCHMENT : palette.ORANGE} />
       );
     }
     return innerTiles;
@@ -56,7 +51,7 @@ export const Grid = ({ movePiece }) => {
   return <StyledGrid>{tiles}</StyledGrid>;
 };
 
-export const Board = ({ children, movePiece }) => {
+export const Board = ({ children }) => {
   return (
     <div style={{ width: "fit-content" }}>
       <StyledBaseGrid
@@ -68,7 +63,7 @@ export const Board = ({ children, movePiece }) => {
       >
         {children}
       </StyledBaseGrid>
-      <Grid movePiece={movePiece} />
+      <Grid />
     </div>
   );
 };

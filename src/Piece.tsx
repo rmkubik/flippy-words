@@ -13,12 +13,73 @@ export const DragItemTypes = {
   PIECE: "piece",
 };
 
+function isHorizontal(degrees) {
+  return degrees === 90 || degrees === 270;
+}
+
+function calcTransformOrigin(data: PieceData) {
+  if (data.dimensions.height === data.dimensions.width) return "center";
+
+  return `${(tileSize - pieceInnerMargin * 2) / 2}px
+  ${(tileSize - pieceInnerMargin * 2) / 2}px`;
+}
+
+function clampPieceLocationToBounds(
+  { row, col }: { row: number; col: number },
+  { rotation, dimensions }: PieceData
+) {
+  if (dimensions.width === dimensions.height) {
+    return {
+      row: clamp(row, 0, tilesHigh - dimensions.height),
+      col: clamp(col, 0, tilesWide - dimensions.width),
+    };
+  }
+
+  let minRow;
+  let maxRow;
+  let minCol;
+  let maxCol;
+
+  switch (rotation) {
+    case 0:
+      minRow = 0;
+      maxRow = tilesHigh - dimensions.height;
+      minCol = 0;
+      maxCol = tilesWide - dimensions.width;
+      break;
+    case 90:
+      minRow = 0;
+      maxRow = tilesHigh - 1;
+      minCol = dimensions.width;
+      maxCol = tilesWide - 1;
+      break;
+    case 180:
+      minRow = dimensions.height - 1;
+      maxRow = tilesWide - 1;
+      minCol = 0;
+      maxCol = tilesWide - dimensions.width;
+      break;
+    case 270:
+      minRow = dimensions.width - 1;
+      maxRow = tilesWide - dimensions.width;
+      minCol = 0;
+      maxCol = tilesWide - dimensions.height;
+      break;
+  }
+
+  return {
+    row: clamp(row, minRow, maxRow),
+    col: clamp(col, minCol, maxCol),
+  };
+}
+
 const StyledPiece = styled.div<{
   $tilesWide;
   $tilesHigh;
   $row;
   $col;
   $rotation;
+  $data;
 }>`
   width: ${(props) =>
     props.$tilesWide * tileSize +
@@ -33,8 +94,8 @@ const StyledPiece = styled.div<{
   grid-column: span ${(props) => props.$tilesWide};
   grid-row: span ${(props) => props.$tilesHigh};
   // +1 here because these properties are 1 indexed
-  grid-row-start: ${(props) => props.$row + 1};
-  grid-column-start: ${(props) => props.$col + 1};
+  /* grid-row-start: ${(props) => props.$row + 1};
+  grid-column-start: ${(props) => props.$col + 1}; */
 
   position: relative;
   pointer-events: all;
@@ -42,61 +103,61 @@ const StyledPiece = styled.div<{
   font-family: Arial, Helvetica, sans-serif;
   font-weight: bold;
 
-  transform-origin: center;
-  transform: rotate(${(props) => props.$rotation}deg); // translate(-50%);
+  transform-origin: ${(props) => calcTransformOrigin(props.$data)};
+  transform: rotate(${(props) => props.$rotation}deg);
 
   margin: ${pieceInnerMargin}px;
+
+  user-select: none;
 
   /**
    * This style applies to the dragged element.
    */
   &:active {
     cursor: grab;
-    transform: rotate(${(props) => props.$rotation}deg);
+    /* transform: rotate(${(props) => props.$rotation}deg) translate(-50%); */
   }
 `;
 
-export const Piece = ({ children, data, movePiece }) => {
-  const [isAnyPieceDragging, setIsAnyPieceDragging] = useState(false);
-  const [rotation, setRotation] = useState(0);
-  const isDragging = false;
+export const Piece = ({ children, data, movePiece, rotatePiece }) => {
+  const [isDragging, setIsDragging] = useState(false);
 
   return (
     <Draggable
+      onStart={() => {
+        setIsDragging(true);
+      }}
       onStop={(event, { x, y }) => {
-        const row = Math.floor((x + pieceInnerMargin) / tileSize);
-        const col = Math.floor((y + pieceInnerMargin) / tileSize);
+        const effectiveX = x + pieceInnerMargin;
+        const effectiveY = y + pieceInnerMargin;
 
-        movePiece(data.id, {
-          row: clamp(row, 0, tilesHigh),
-          col: clamp(col, 0, tilesWide),
-        });
+        // Add tileSize / 2 to align the snapping to the visual
+        // position of the dragged piece.
+        const row = Math.floor((effectiveY + tileSize / 2) / tileSize);
+        const col = Math.floor((effectiveX + tileSize / 2) / tileSize);
+
+        movePiece(data.id, { row, col });
+
+        setIsDragging(false);
       }}
       position={{
-        x: data.location.row * tileSize,
-        y: data.location.col * tileSize,
+        x: data.location.col * tileSize,
+        y: data.location.row * tileSize,
       }}
     >
       <div style={{ position: "absolute" }}>
         <StyledPiece
           style={{
-            opacity: isDragging ? 0.5 : 1,
             cursor: isDragging ? "grabbing" : "grab",
-            /**
-             * Prevent any pieces from blocking drop events. ReactDND
-             * doesn't seem to have a built in way to support this so
-             * we hacked it in.
-             */
-            pointerEvents:
-              isAnyPieceDragging && !isDragging ? "none" : undefined,
           }}
+          $data={data}
           $tilesWide={data.dimensions.width}
           $tilesHigh={data.dimensions.height}
           $row={data.location?.row ?? 0}
           $col={data.location?.col ?? 0}
-          $rotation={rotation}
+          $rotation={data.rotation}
           onDoubleClick={() => {
-            setRotation((rotation + 90) % 360);
+            rotatePiece(data.id, (data.rotation + 90) % 360);
           }}
         >
           {children}
@@ -141,6 +202,7 @@ Piece.Right = Right;
 
 export type PieceData = {
   id: string;
+  rotation: 0 | 90 | 180 | 270;
   location: {
     row: number;
     col: number;
@@ -157,9 +219,20 @@ export type PieceData = {
   };
 };
 
-const startingPieces = [
+/**
+ * The dimensions of a pice must be either
+ * square, or it must be higher than it is
+ * tall.
+ *
+ * The current rotation and clamping logic
+ * for movement doesn't support wider pieces
+ * correctly.
+ */
+
+const startingPieces: PieceData[] = [
   {
     id: uuid(),
+    rotation: 0,
     location: {
       row: 0,
       col: 0,
@@ -177,6 +250,7 @@ const startingPieces = [
   },
   {
     id: uuid(),
+    rotation: 0,
     location: {
       row: 2,
       col: 2,
@@ -184,6 +258,24 @@ const startingPieces = [
     dimensions: {
       width: 1,
       height: 2,
+    },
+    words: {
+      top: "top",
+      bottom: "bottom",
+      right: "right",
+      left: "left",
+    },
+  },
+  {
+    id: uuid(),
+    rotation: 0,
+    location: {
+      row: 1,
+      col: 4,
+    },
+    dimensions: {
+      width: 1,
+      height: 3,
     },
     words: {
       top: "top",
@@ -203,14 +295,47 @@ export const usePieces = () => {
     setPiecesData((prevData) => {
       const pieceDataIndex = prevData.findIndex((data) => data.id === pieceId);
 
-      console.log({ pieceId, newLocation });
+      if (pieceDataIndex === -1)
+        throw new Error(`Piece doesn't have data. ${pieceId}`);
+
+      const clampedLocation = clampPieceLocationToBounds(
+        newLocation,
+        prevData[pieceDataIndex]
+      );
+
+      const newData = update(prevData, pieceDataIndex, {
+        ...prevData[pieceDataIndex],
+        location: clampedLocation,
+      });
+
+      return newData;
+    });
+  };
+
+  /**
+   * TODO:
+   * For not even pieces, rotation actually needs to MOVE
+   * the piece, right?
+   */
+  const rotatePiece = (pieceId, newRotation) => {
+    setPiecesData((prevData) => {
+      const pieceDataIndex = prevData.findIndex((data) => data.id === pieceId);
 
       if (pieceDataIndex === -1)
         throw new Error(`Piece doesn't have data. ${pieceId}`);
 
+      const clampedLocation = clampPieceLocationToBounds(
+        prevData[pieceDataIndex].location,
+        {
+          ...prevData[pieceDataIndex],
+          rotation: newRotation,
+        }
+      );
+
       const newData = update(prevData, pieceDataIndex, {
         ...prevData[pieceDataIndex],
-        location: newLocation,
+        // location: clampedLocation,
+        rotation: newRotation,
       });
 
       return newData;
@@ -222,7 +347,12 @@ export const usePieces = () => {
       .filter((data) => data.location !== null)
       .map((data) => {
         return (
-          <Piece key={data.id} data={data} movePiece={movePiece}>
+          <Piece
+            key={data.id}
+            data={data}
+            movePiece={movePiece}
+            rotatePiece={rotatePiece}
+          >
             <Piece.Top>{data.words.top}</Piece.Top>
             <Piece.Bottom>{data.words.bottom}</Piece.Bottom>
             <Piece.Left>{data.words.left}</Piece.Left>
@@ -234,7 +364,12 @@ export const usePieces = () => {
       .filter((data) => data.location === null)
       .map((data) => {
         return (
-          <Piece key={data.id} data={data} movePiece={movePiece}>
+          <Piece
+            key={data.id}
+            data={data}
+            movePiece={movePiece}
+            rotatePiece={rotatePiece}
+          >
             <Piece.Top>{data.words.top}</Piece.Top>
             <Piece.Bottom>{data.words.bottom}</Piece.Bottom>
             <Piece.Left>{data.words.left}</Piece.Left>
@@ -246,5 +381,5 @@ export const usePieces = () => {
     return { boardPieces, trayPieces };
   }, [piecesData]);
 
-  return { boardPieces, trayPieces, movePiece };
+  return { boardPieces, trayPieces, movePiece, rotatePiece };
 };

@@ -13,6 +13,6 @@ const StyledTray = styled.div`
   flex-wrap: wrap;
 `;
 
-export const Tray = ({ children, movePiece }) => {
+export const Tray = ({ children }) => {
   return <StyledTray>{children}</StyledTray>;
 };
