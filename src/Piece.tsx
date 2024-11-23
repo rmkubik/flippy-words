@@ -100,14 +100,10 @@ const StyledPiece = styled.div<{
     props.$valid ? palette.GREEN : palette.OFF_WHITE};
   grid-column: span ${(props) => props.$tilesWide};
   grid-row: span ${(props) => props.$tilesHigh};
-  // +1 here because these properties are 1 indexed
-  /* grid-row-start: ${(props) => props.$row + 1};
-  grid-column-start: ${(props) => props.$col + 1}; */
 
   position: relative;
   pointer-events: all;
 
-  /* font-family: Arial, Helvetica, sans-serif; */
   font-weight: bold;
 
   transform-origin: ${(props) => calcTransformOrigin(props.$data)};
@@ -131,6 +127,7 @@ export const Piece = ({ children, data, movePiece, rotatePiece, valid }) => {
 
   return (
     <Draggable
+      cancel=".no-drag"
       onStart={() => {
         setIsDragging(true);
       }}
@@ -213,6 +210,18 @@ Piece.Bottom = Bottom;
 Piece.Left = Left;
 Piece.Right = Right;
 
+const PieceButtonContainer = styled.div`
+  position: absolute;
+`;
+
+const RotateButtonContainer = styled.div`
+  &:hover {
+    transition: 100ms;
+    transition-property: transform;
+    transform: scale(1.2) rotate(12deg);
+  }
+`;
+
 export const usePieces = () => {
   const [checkCount, setCheckCount] = useState(0);
   const [validatedIds, setValidatedIds] = useState<Set<string>>(new Set());
@@ -292,13 +301,13 @@ export const usePieces = () => {
             movePiece={movePiece}
             rotatePiece={rotatePiece}
           >
-            <div
+            <PieceButtonContainer
               style={{
-                position: "absolute",
                 ...calcRotateButtonPosition(data),
               }}
             >
               <div
+                className="no-drag"
                 style={{
                   width: "3rem",
                   transform: `translate(-50%, -50%) rotate(${-data.rotation}deg)`,
@@ -310,9 +319,10 @@ export const usePieces = () => {
                   ></span>
                 ) : (
                   <button
-                    onClick={() =>
-                      rotatePiece(data.id, (data.rotation + 90) % 360)
-                    }
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      rotatePiece(data.id, (data.rotation + 90) % 360);
+                    }}
                     style={{
                       fontSize: "2rem",
                       border: "none",
@@ -321,15 +331,15 @@ export const usePieces = () => {
                       cursor: "pointer",
                     }}
                   >
-                    <div
+                    <RotateButtonContainer
                       dangerouslySetInnerHTML={{
                         __html: clockwiseRotationIcon,
                       }}
-                    ></div>
+                    ></RotateButtonContainer>
                   </button>
                 )}
               </div>
-            </div>
+            </PieceButtonContainer>
             <Piece.Top>{data.words.top}</Piece.Top>
             <Piece.Bottom>{data.words.bottom}</Piece.Bottom>
             <Piece.Left>{data.words.left}</Piece.Left>
@@ -346,6 +356,7 @@ export const usePieces = () => {
             data={data}
             movePiece={movePiece}
             rotatePiece={rotatePiece}
+            valid={false}
           >
             <Piece.Top>{data.words.top}</Piece.Top>
             <Piece.Bottom>{data.words.bottom}</Piece.Bottom>
