@@ -6,22 +6,26 @@ import { v4 as uuid } from "uuid";
 import { update } from "./arrays";
 import Draggable from "react-draggable";
 import { clamp } from "./numbers";
+import { PieceData, solutionPieces, startingPieces } from "./data";
+import clockwiseRotation from "inline-text:./clockwise-rotation.svg";
 
 export const pieceInnerMargin = 4;
-
-export const DragItemTypes = {
-  PIECE: "piece",
-};
-
-function isHorizontal(degrees) {
-  return degrees === 90 || degrees === 270;
-}
 
 function calcTransformOrigin(data: PieceData) {
   if (data.dimensions.height === data.dimensions.width) return "center";
 
   return `${(tileSize - pieceInnerMargin * 2) / 2}px
   ${(tileSize - pieceInnerMargin * 2) / 2}px`;
+}
+
+function calcRotateButtonPosition(data: PieceData) {
+  if (data.dimensions.height === data.dimensions.width)
+    return { top: "50%", left: "50%" };
+
+  return {
+    top: `${(tileSize - pieceInnerMargin * 2) / 2}px`,
+    left: `${(tileSize - pieceInnerMargin * 2) / 2}px`,
+  };
 }
 
 function clampPieceLocationToBounds(
@@ -80,6 +84,7 @@ const StyledPiece = styled.div<{
   $col;
   $rotation;
   $data;
+  $valid;
 }>`
   width: ${(props) =>
     props.$tilesWide * tileSize +
@@ -90,7 +95,8 @@ const StyledPiece = styled.div<{
     (props.$tilesHigh - 1) * gridGap -
     pieceInnerMargin * 2}px;
 
-  background-color: ${palette.OFF_WHITE};
+  background-color: ${(props) =>
+    props.$valid ? palette.GREEN : palette.OFF_WHITE};
   grid-column: span ${(props) => props.$tilesWide};
   grid-row: span ${(props) => props.$tilesHigh};
   // +1 here because these properties are 1 indexed
@@ -100,7 +106,7 @@ const StyledPiece = styled.div<{
   position: relative;
   pointer-events: all;
 
-  font-family: Arial, Helvetica, sans-serif;
+  /* font-family: Arial, Helvetica, sans-serif; */
   font-weight: bold;
 
   transform-origin: ${(props) => calcTransformOrigin(props.$data)};
@@ -119,7 +125,7 @@ const StyledPiece = styled.div<{
   }
 `;
 
-export const Piece = ({ children, data, movePiece, rotatePiece }) => {
+export const Piece = ({ children, data, movePiece, rotatePiece, valid }) => {
   const [isDragging, setIsDragging] = useState(false);
 
   return (
@@ -156,6 +162,7 @@ export const Piece = ({ children, data, movePiece, rotatePiece }) => {
           $row={data.location?.row ?? 0}
           $col={data.location?.col ?? 0}
           $rotation={data.rotation}
+          $valid={valid}
           onDoubleClick={() => {
             rotatePiece(data.id, (data.rotation + 90) % 360);
           }}
@@ -183,16 +190,16 @@ const Bottom = styled.div`
 
 const Left = styled.div`
   position: absolute;
-  left: 0;
+  left: 0.5em;
   top: 50%;
-  transform: translateY(-50%) rotate(90deg);
+  transform: translateX(-50%) rotate(90deg);
 `;
 
 const Right = styled.div`
   position: absolute;
-  right: 0;
+  right: 0.75em;
   top: 50%;
-  transform: translateY(-50%) rotate(270deg);
+  transform: translateX(50%) rotate(270deg);
 `;
 
 Piece.Top = Top;
@@ -200,92 +207,9 @@ Piece.Bottom = Bottom;
 Piece.Left = Left;
 Piece.Right = Right;
 
-export type PieceData = {
-  id: string;
-  rotation: 0 | 90 | 180 | 270;
-  location: {
-    row: number;
-    col: number;
-  } | null;
-  dimensions: {
-    width: number;
-    height: number;
-  };
-  words: {
-    top: string;
-    bottom: string;
-    left: string;
-    right: string;
-  };
-};
-
-/**
- * The dimensions of a pice must be either
- * square, or it must be higher than it is
- * tall.
- *
- * The current rotation and clamping logic
- * for movement doesn't support wider pieces
- * correctly.
- */
-const startingPieces: PieceData[] = [
-  {
-    id: uuid(),
-    rotation: 0,
-    location: {
-      row: 0,
-      col: 0,
-    },
-    dimensions: {
-      width: 2,
-      height: 2,
-    },
-    words: {
-      top: "top",
-      bottom: "bottom",
-      right: "right",
-      left: "left",
-    },
-  },
-  {
-    id: uuid(),
-    rotation: 0,
-    location: {
-      row: 2,
-      col: 2,
-    },
-    dimensions: {
-      width: 1,
-      height: 2,
-    },
-    words: {
-      top: "top",
-      bottom: "bottom",
-      right: "right",
-      left: "left",
-    },
-  },
-  {
-    id: uuid(),
-    rotation: 0,
-    location: {
-      row: 1,
-      col: 4,
-    },
-    dimensions: {
-      width: 1,
-      height: 3,
-    },
-    words: {
-      top: "top",
-      bottom: "bottom",
-      right: "right",
-      left: "left",
-    },
-  },
-];
-
 export const usePieces = () => {
+  const [checkCount, setCheckCount] = useState(0);
+  const [validatedIds, setValidatedIds] = useState<Set<string>>(new Set());
   const [piecesData, setPiecesData] = useState<PieceData[]>(
     () => startingPieces
   );
@@ -358,9 +282,33 @@ export const usePieces = () => {
           <Piece
             key={data.id}
             data={data}
+            valid={validatedIds.has(data.id)}
             movePiece={movePiece}
-            rotatePiece={rotatePiece}
+            rotatePiece={() => {}}
           >
+            <div
+              style={{
+                position: "absolute",
+                ...calcRotateButtonPosition(data),
+              }}
+            >
+              <button
+                onClick={() => rotatePiece(data.id, (data.rotation + 90) % 360)}
+                style={{
+                  fontSize: "2rem",
+                  width: "3rem",
+                  border: "none",
+                  background: "none",
+                  textShadow: `2px 2px 0 ${palette.BLACK}`,
+                  cursor: "pointer",
+                  transform: `translate(-50%, -50%) rotate(${-data.rotation}deg)`,
+                }}
+              >
+                <div
+                  dangerouslySetInnerHTML={{ __html: clockwiseRotation }}
+                ></div>
+              </button>
+            </div>
             <Piece.Top>{data.words.top}</Piece.Top>
             <Piece.Bottom>{data.words.bottom}</Piece.Bottom>
             <Piece.Left>{data.words.left}</Piece.Left>
@@ -387,7 +335,32 @@ export const usePieces = () => {
       });
 
     return { boardPieces, trayPieces };
-  }, [piecesData]);
+  }, [piecesData, validatedIds]);
 
-  return { boardPieces, trayPieces, movePiece, rotatePiece };
+  // const checkCount = validatedIds.size;
+
+  const check = () => {
+    setCheckCount(checkCount + 1);
+    const newValidatedIds = new Set(validatedIds);
+
+    piecesData.forEach((piece) => {
+      const solutionPiece = solutionPieces.find(
+        (solutionPiece) => solutionPiece.id === piece.id
+      );
+
+      if (!solutionPiece) return;
+
+      if (
+        solutionPiece.location?.row === piece.location?.row &&
+        solutionPiece.location?.col === piece.location?.col &&
+        solutionPiece.rotation === piece.rotation
+      ) {
+        newValidatedIds.add(piece.id);
+      }
+    });
+
+    setValidatedIds(newValidatedIds);
+  };
+
+  return { boardPieces, checkCount, check, movePiece, rotatePiece };
 };

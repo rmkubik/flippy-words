@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Board } from "./Board";
 import { Piece, usePieces } from "./Piece";
 import styled, { createGlobalStyle } from "styled-components";
 import { palette } from "./palette";
-import { Tray } from "./Tray";
+import CheckRow from "./CheckRow";
+import { PieceData, solutionPieces } from "./data";
 
 const Container = styled.div`
   display: flex;
@@ -19,19 +20,23 @@ const GlobalStyle = createGlobalStyle`
   body {
     color: ${palette.BLACK};
     background-color: ${palette.PARCHMENT};
+    font-family: Arial, Helvetica, sans-serif;
+
   }
 `;
 
 const App = () => {
-  const { boardPieces, trayPieces } = usePieces();
+  const { boardPieces, checkCount, check } = usePieces();
 
   return (
     <>
       <GlobalStyle />
       <Container>
-        <Board>{boardPieces}</Board>
+        <div>
+          <CheckRow count={checkCount} check={check} />
+          <Board>{boardPieces}</Board>
+        </div>
       </Container>
-      {/* <Tray>{trayPieces}</Tray> */}
     </>
   );
 };

@@ -1,5 +1,4 @@
 import React from "react";
-import { DragItemTypes, PieceData } from "./Piece";
 import styled from "styled-components";
 import { palette } from "./palette";
 

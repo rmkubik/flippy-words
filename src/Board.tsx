@@ -58,7 +58,7 @@ function calcWordRotation(side) {
     case "right":
       return 90;
     case "bottom":
-      return 180;
+      return 0;
     case "left":
       return 270;
   }
@@ -71,7 +71,7 @@ function calcWordTop(side, start, width) {
     case "right":
       return `-${WORD_HEIGHT}px`;
     case "bottom":
-      return `${tilesHigh * tileSize + borderWidth * 2 - WORD_HEIGHT}px`;
+      return `${tilesHigh * tileSize + borderWidth * 2}px`;
     case "left":
       // return `${borderWidth + tilesHigh * tileSize}`;
       return `${-WORD_HEIGHT + tilesHigh * tileSize - start * tileSize}px`;
@@ -85,9 +85,7 @@ function calcWordLeft(side, start, width) {
     case "right":
       return `${tilesWide * tileSize + borderWidth * 2}px`;
     case "bottom":
-      return `${
-        borderWidth + tilesWide * tileSize - (start * tileSize + borderWidth)
-      }px`;
+      return `${borderWidth + start * tileSize}px`;
     case "left":
       return undefined;
   }
@@ -98,7 +96,7 @@ const Word = styled.span<{
   $side: "top" | "left" | "bottom" | "right";
   $start: number;
 }>`
-  font-family: Arial, Helvetica, sans-serif;
+  /* font-family: Arial, Helvetica, sans-serif; */
   font-weight: bold;
 
   display: block;
@@ -122,33 +120,33 @@ const Word = styled.span<{
 
 export const Board = ({ children }) => {
   return (
-    <div style={{ width: "fit-content", position: "relative" }}>
+    <div style={{ width: "fit-content", position: "relative", margin: "2rem" }}>
       <Word $width={2} $side="top" $start={0}>
-        Top1
+        highway
       </Word>
       <Word $width={2} $side="top" $start={2}>
-        Top2
+        tv
       </Word>
       <Word $width={1} $side="top" $start={4}>
-        Top3
+        volume
       </Word>
       <Word $width={2} $side="bottom" $start={0}>
-        Bottom1
+        ignite
       </Word>
       <Word $width={3} $side="bottom" $start={2}>
-        Bottom2
+        weed
       </Word>
       <Word $width={1} $side="left" $start={0}>
-        Left1
+        beans
       </Word>
       <Word $width={1} $side="left" $start={1}>
-        Left2
+        rice
       </Word>
       <Word $width={3} $side="left" $start={2}>
-        Left3
+        freezer
       </Word>
       <Word $width={5} $side="right" $start={0}>
-        Right
+        shipping
       </Word>
       <StyledBaseGrid
         style={{
