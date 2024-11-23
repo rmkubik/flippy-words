@@ -6,6 +6,7 @@
   "dependencies": {
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "animate.css": "^4.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-draggable": "^4.4.6",
@@ -15,11 +16,17 @@
   "devDependencies": {
     "@parcel/transformer-inline-string": "^2.13.0",
     "parcel": "^2.13.0",
-    "process": "^0.11.10"
+    "process": "^0.11.10",
+    "rimraf": "^6.0.1",
+    "svgo": "^3.3.2"
   },
   "scripts": {
     "start": "parcel src/index.html",
-    "build": "parcel build src/index.html"
+    "build:clean": "rimraf dist",
+    "build:app": "parcel build src/index.html --public-url='.'",
+    "build": "npm run build:clean && npm run build:app",
+    "deploy": "npm run build && npm run deploy:itch",
+    "deploy:itch": "butler push dist rmkubik/flippy-words:html"
   },
   "author": "Ryan Kubik",
   "license": "UNLICENSED"

@@ -15,6 +15,11 @@ const Row = styled.div`
     box-shadow: 2px 2px ${palette.BLACK};
     background: ${palette.OFF_WHITE};
     cursor: pointer;
+
+    &:hover {
+      transform: scale(1.2);
+      text-decoration: underline;
+    }
   }
 
   * {

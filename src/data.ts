@@ -75,7 +75,7 @@ export const startingPieces: PieceData[] = [
     rotation: 270,
     location: { row: 4, col: 2 },
     dimensions: { width: 1, height: 2 },
-    words: { top: "net", bottom: "expand", right: "joint", left: "mouth" },
+    words: { top: "angle", bottom: "expand", right: "joint", left: "mouth" },
   },
 ];
 
@@ -209,7 +209,7 @@ export const solutionPieces: PieceData[] = [
       height: 2,
     },
     words: {
-      top: "net", // answer
+      top: "angle", // answer
       bottom: "expand",
       right: "joint", // answer
       left: "mouth",

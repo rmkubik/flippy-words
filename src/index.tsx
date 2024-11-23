@@ -14,6 +14,7 @@ const Container = styled.div`
   height: 100vh;
   width: 100vw;
   padding: 64px;
+  box-sizing: border-box;
 `;
 
 const GlobalStyle = createGlobalStyle`
@@ -21,7 +22,7 @@ const GlobalStyle = createGlobalStyle`
     color: ${palette.BLACK};
     background-color: ${palette.PARCHMENT};
     font-family: Arial, Helvetica, sans-serif;
-
+    margin: 0;
   }
 `;
 

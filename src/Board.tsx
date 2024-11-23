@@ -69,7 +69,7 @@ function calcWordTop(side, start, width) {
     case "top":
       return `-${WORD_HEIGHT}px`;
     case "right":
-      return `-${WORD_HEIGHT}px`;
+      return `${-WORD_HEIGHT + start * tileSize}px`;
     case "bottom":
       return `${tilesHigh * tileSize + borderWidth * 2}px`;
     case "left":
@@ -145,8 +145,11 @@ export const Board = ({ children }) => {
       <Word $width={3} $side="left" $start={2}>
         freezer
       </Word>
-      <Word $width={5} $side="right" $start={0}>
+      <Word $width={3} $side="right" $start={0}>
         shipping
+      </Word>
+      <Word $width={2} $side="right" $start={3}>
+        right
       </Word>
       <StyledBaseGrid
         style={{

@@ -7,7 +7,8 @@ import { update } from "./arrays";
 import Draggable from "react-draggable";
 import { clamp } from "./numbers";
 import { PieceData, solutionPieces, startingPieces } from "./data";
-import clockwiseRotation from "inline-text:./clockwise-rotation.svg";
+import clockwiseRotationIcon from "inline-text:./clockwise-rotation.svg";
+import confirmedIcon from "inline-text:./confirmed.svg";
 
 export const pieceInnerMargin = 4;
 
@@ -150,6 +151,7 @@ export const Piece = ({ children, data, movePiece, rotatePiece, valid }) => {
         x: (data.location?.col ?? 0) * tileSize,
         y: (data.location?.row ?? 0) * tileSize,
       }}
+      disabled={valid}
     >
       <div style={{ position: "absolute" }}>
         <StyledPiece
@@ -163,9 +165,13 @@ export const Piece = ({ children, data, movePiece, rotatePiece, valid }) => {
           $col={data.location?.col ?? 0}
           $rotation={data.rotation}
           $valid={valid}
-          onDoubleClick={() => {
-            rotatePiece(data.id, (data.rotation + 90) % 360);
-          }}
+          onDoubleClick={
+            valid
+              ? () => {}
+              : () => {
+                  rotatePiece(data.id, (data.rotation + 90) % 360);
+                }
+          }
         >
           {children}
         </StyledPiece>
@@ -284,7 +290,7 @@ export const usePieces = () => {
             data={data}
             valid={validatedIds.has(data.id)}
             movePiece={movePiece}
-            rotatePiece={() => {}}
+            rotatePiece={rotatePiece}
           >
             <div
               style={{
@@ -292,22 +298,37 @@ export const usePieces = () => {
                 ...calcRotateButtonPosition(data),
               }}
             >
-              <button
-                onClick={() => rotatePiece(data.id, (data.rotation + 90) % 360)}
+              <div
                 style={{
-                  fontSize: "2rem",
                   width: "3rem",
-                  border: "none",
-                  background: "none",
-                  textShadow: `2px 2px 0 ${palette.BLACK}`,
-                  cursor: "pointer",
                   transform: `translate(-50%, -50%) rotate(${-data.rotation}deg)`,
                 }}
               >
-                <div
-                  dangerouslySetInnerHTML={{ __html: clockwiseRotation }}
-                ></div>
-              </button>
+                {validatedIds.has(data.id) ? (
+                  <span
+                    dangerouslySetInnerHTML={{ __html: confirmedIcon }}
+                  ></span>
+                ) : (
+                  <button
+                    onClick={() =>
+                      rotatePiece(data.id, (data.rotation + 90) % 360)
+                    }
+                    style={{
+                      fontSize: "2rem",
+                      border: "none",
+                      background: "none",
+                      textShadow: `2px 2px 0 ${palette.BLACK}`,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: clockwiseRotationIcon,
+                      }}
+                    ></div>
+                  </button>
+                )}
+              </div>
             </div>
             <Piece.Top>{data.words.top}</Piece.Top>
             <Piece.Bottom>{data.words.bottom}</Piece.Bottom>
