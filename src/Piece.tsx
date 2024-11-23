@@ -319,6 +319,7 @@ export const usePieces = () => {
                   ></span>
                 ) : (
                   <button
+                    onDoubleClick={(event) => event.stopPropagation()}
                     onClick={(event) => {
                       event.stopPropagation();
                       rotatePiece(data.id, (data.rotation + 90) % 360);
