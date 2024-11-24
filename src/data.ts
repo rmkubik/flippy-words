@@ -47,7 +47,7 @@ export const startingPieces: PieceData[] = [
   {
     id: "4",
     rotation: 180,
-    location: { row: 3, col: 7 },
+    location: { row: 5, col: 8 },
     dimensions: { width: 1, height: 3 },
     words: { top: "container", bottom: "gourd", right: "lamp", left: "remote" },
   },
@@ -97,7 +97,7 @@ export const startingPieces: PieceData[] = [
     // decoy piece
     id: "10",
     rotation: 0,
-    location: { row: 3, col: 8 },
+    location: { row: 1, col: 7 },
     dimensions: { width: 1, height: 3 },
     words: {
       top: "herbicide",
