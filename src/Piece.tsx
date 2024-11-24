@@ -42,6 +42,29 @@ function calcBoxShadow(data: PieceData) {
   }
 }
 
+function calcBackgroundColor(data: PieceData, valid: boolean) {
+  if (valid) {
+    return palette.GREEN;
+  }
+
+  const number = parseInt(data.id);
+
+  if (Number.isNaN(number)) {
+    return palette.OFF_WHITE;
+  }
+
+  switch (number % 4) {
+    case 0:
+      return palette.RED;
+    case 1:
+      return palette.GRAY;
+    case 2:
+      return palette.YELLOW;
+    case 3:
+      return palette.MAROON;
+  }
+}
+
 function clampPieceLocationToBounds(
   { row, col }: { row: number; col: number },
   { rotation, dimensions }: PieceData
@@ -110,7 +133,7 @@ const StyledPiece = styled.div<{
     pieceInnerMargin * 2}px;
 
   background-color: ${(props) =>
-    props.$valid ? palette.GREEN : palette.OFF_WHITE};
+    calcBackgroundColor(props.$data, props.$valid)};
   grid-column: span ${(props) => props.$tilesWide};
   grid-row: span ${(props) => props.$tilesHigh};
 
