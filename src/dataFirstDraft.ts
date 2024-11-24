@@ -23,7 +23,7 @@ export const startingPieces: PieceData[] = [
     rotation: 270,
     location: { row: 4, col: 6 },
     dimensions: { width: 2, height: 2 },
-    words: { top: "traffic", bottom: "bone", right: "cactus", left: "thaw" },
+    words: { top: "traffic", bottom: "bone", right: "right", left: "thaw" },
   },
   {
     id: "2",
@@ -77,35 +77,6 @@ export const startingPieces: PieceData[] = [
     dimensions: { width: 1, height: 2 },
     words: { top: "angle", bottom: "expand", right: "joint", left: "mouth" },
   },
-  {
-    // decoy piece
-    id: "8",
-    rotation: 90,
-    location: { row: 0, col: 8 },
-    dimensions: { width: 1, height: 2 },
-    words: { top: "winter", bottom: "speaker", right: "plate", left: "laptop" },
-  },
-  {
-    // decoy piece
-    id: "9",
-    rotation: 180,
-    location: { row: 2, col: 8 },
-    dimensions: { width: 1, height: 2 },
-    words: { top: "hat", bottom: "protein", right: "kindle", left: "net" },
-  },
-  {
-    // decoy piece
-    id: "10",
-    rotation: 0,
-    location: { row: 3, col: 8 },
-    dimensions: { width: 1, height: 3 },
-    words: {
-      top: "herbicide",
-      bottom: "volcano",
-      right: "correct",
-      left: "truck",
-    },
-  },
 ];
 
 /**
@@ -132,7 +103,7 @@ export const solutionPieces: PieceData[] = [
     words: {
       top: "traffic", // answer
       bottom: "bone",
-      right: "cactus",
+      right: "right",
       left: "thaw", // answer
     },
   },

@@ -187,9 +187,9 @@ export const Piece = ({ children, data, movePiece, rotatePiece, valid }) => {
 
 const Top = styled.div`
   position: absolute;
-  top: 0;
+  top: 0rem;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) rotate(180deg);
 `;
 
 const Bottom = styled.div`
@@ -237,6 +237,15 @@ export const usePieces = () => {
     () => startingPieces
   );
 
+  /**
+   * TODO:
+   * Write now, pieces can be moved or rotated such that they completely
+   * occlude other pieces. This is mostly fine, but can be problematic
+   * if a locked valid piece totally occludes an unlocked piece.
+   *
+   * I'm willing to roll with this for the jam, but it would be good to
+   * actually prevent this scenario.
+   */
   const movePiece = (pieceId, newLocation) => {
     setPiecesData((prevData) => {
       const pieceDataIndex = prevData.findIndex((data) => data.id === pieceId);
@@ -391,8 +400,17 @@ export const usePieces = () => {
     setCheckCount(checkCount + 1);
     const newValidatedIds = new Set(validatedIds);
 
-    piecesData.forEach((piece) => {
-      const solutionPiece = solutionPieces.find(
+    /**
+     * We should only check solution pieces for correct placement,
+     * the piecesData may contain other pieces in positions that
+     * we do not care about which are not part of our solution.
+     *
+     * Technically, this does mean if you layered an unused piece
+     * on the board with a correct one it would get graded as correct
+     * even though that piece is "invalid".
+     */
+    solutionPieces.forEach((solutionPiece) => {
+      const piece = piecesData.find(
         (solutionPiece) => solutionPiece.id === piece.id
       );
 
