@@ -29,6 +29,19 @@ function calcRotateButtonPosition(data: PieceData) {
   };
 }
 
+function calcBoxShadow(data: PieceData) {
+  switch (data.rotation % 360) {
+    case 0:
+      return "2px 2px";
+    case 90:
+      return "2px -2px";
+    case 180:
+      return "-2px -2px";
+    case 270:
+      return "-2px 2px";
+  }
+}
+
 function clampPieceLocationToBounds(
   { row, col }: { row: number; col: number },
   { rotation, dimensions }: PieceData
@@ -114,6 +127,10 @@ const StyledPiece = styled.div<{
   margin: ${pieceInnerMargin}px;
 
   user-select: none;
+
+  box-sizing: border-box;
+  border: 2px solid ${palette.BLACK};
+  box-shadow: ${(props) => calcBoxShadow(props.$data)} ${palette.BLACK};
 
   /**
    * This style applies to the dragged element.
