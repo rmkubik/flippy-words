@@ -13,7 +13,7 @@ const Container = styled.div`
   justify-content: start;
   height: 100vh;
   width: 100vw;
-  padding: 64px;
+  padding: 16px;
   box-sizing: border-box;
 `;
 
