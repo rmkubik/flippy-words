@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { gridGap, tilesHigh, tileSize, tilesWide } from "./Board";
 import { palette } from "./palette";
@@ -45,7 +45,7 @@ function clampPieceLocationToBounds(
   let minCol;
   let maxCol;
 
-  switch (rotation) {
+  switch (rotation % 360) {
     case 0:
       minRow = 0;
       maxRow = tilesHigh - dimensions.height;
@@ -106,6 +106,8 @@ const StyledPiece = styled.div<{
 
   font-weight: bold;
 
+  transition: 200ms;
+  transition-property: transform;
   transform-origin: ${(props) => calcTransformOrigin(props.$data)};
   transform: rotate(${(props) => props.$rotation}deg);
 
@@ -154,6 +156,12 @@ export const Piece = ({ children, data, movePiece, rotatePiece, valid }) => {
         <StyledPiece
           style={{
             cursor: isDragging ? "grabbing" : "grab",
+            /**
+             * The transform prop needs to be out here and not in the
+             * styled component so it can be properly transitioned by
+             * the css transition value when it changes.
+             */
+            transform: `rotate(${(props) => props.$rotation}deg)`,
           }}
           $data={data}
           $tilesWide={data.dimensions.width}
@@ -166,7 +174,7 @@ export const Piece = ({ children, data, movePiece, rotatePiece, valid }) => {
             valid
               ? () => {}
               : () => {
-                  rotatePiece(data.id, (data.rotation + 90) % 360);
+                  rotatePiece(data.id, data.rotation + 90);
                 }
           }
         >
@@ -261,8 +269,15 @@ export const usePieces = () => {
 
   /**
    * TODO:
-   * For not even pieces, rotation actually needs to MOVE
-   * the piece, right?
+   * The rotation values in this could technically overflow. Ideally,
+   * I'd want to modulo these by 360 to be certain that this couldn't happen.
+   *
+   * However, the way that css transition animations work, I need to keep
+   * increasing the degree value for the rotation to work as expected.
+   *
+   * I think I could add extra logic to disable the transition, and switch
+   * from 360deg after animation back to 0deg and then re-enable the
+   * transition prop.
    */
   const rotatePiece = (pieceId, newRotation) => {
     setPiecesData((prevData) => {
@@ -322,7 +337,7 @@ export const usePieces = () => {
                     onDoubleClick={(event) => event.stopPropagation()}
                     onClick={(event) => {
                       event.stopPropagation();
-                      rotatePiece(data.id, (data.rotation + 90) % 360);
+                      rotatePiece(data.id, data.rotation + 90);
                     }}
                     style={{
                       fontSize: "2rem",
@@ -386,7 +401,11 @@ export const usePieces = () => {
       if (
         solutionPiece.location?.row === piece.location?.row &&
         solutionPiece.location?.col === piece.location?.col &&
-        solutionPiece.rotation === piece.rotation
+        /**
+         * This needs to be modulo by 360, because piece rotation
+         * can be set to any value on rotation.
+         */
+        solutionPiece.rotation % 360 === piece.rotation % 360
       ) {
         newValidatedIds.add(piece.id);
       }
