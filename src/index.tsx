@@ -19,6 +19,7 @@ const Container = styled.div`
 
 const GlobalStyle = createGlobalStyle`
   body {
+    user-select: none;
     color: ${palette.BLACK};
     background-color: ${palette.PARCHMENT};
     font-family: Arial, Helvetica, sans-serif;
