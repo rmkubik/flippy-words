@@ -68,27 +68,88 @@ function calcWordTop(side, start, width) {
   switch (side) {
     case "top":
       return `-${WORD_HEIGHT}px`;
-    case "right":
-      return `${-WORD_HEIGHT + start * tileSize}px`;
+    case "right": {
+      const basePosition = -WORD_HEIGHT + start * tileSize;
+
+      if (start === 0) {
+        return `${basePosition}px`;
+      }
+
+      return `${basePosition + borderWidth / 2}px`;
+    }
     case "bottom":
       return `${tilesHigh * tileSize + borderWidth * 2}px`;
-    case "left":
-      // return `${borderWidth + tilesHigh * tileSize}`;
-      return `${-WORD_HEIGHT + tilesHigh * tileSize - start * tileSize}px`;
+    case "left": {
+      const basePosition =
+        -WORD_HEIGHT +
+        tilesHigh * tileSize -
+        start * tileSize +
+        borderWidth * 2;
+
+      if (start === 0) {
+        return `${basePosition}px`;
+      }
+
+      return `${basePosition - borderWidth / 2}px`;
+    }
   }
 }
 
 function calcWordLeft(side, start, width) {
   switch (side) {
-    case "top":
-      return `${start * tileSize + borderWidth}px`;
+    case "top": {
+      const basePosition = start * tileSize;
+
+      if (start === 0) {
+        return `${basePosition}px`;
+      }
+
+      return `${basePosition + borderWidth / 2}px`;
+    }
     case "right":
       return `${tilesWide * tileSize + borderWidth * 2}px`;
     case "bottom":
-      return `${borderWidth + start * tileSize}px`;
+      if (start === 0) {
+        return "0px";
+      }
+
+      return `${start * tileSize + borderWidth / 2}px`;
     case "left":
       return undefined;
   }
+}
+
+function calcWordWidth(side, start, width) {
+  let pixelWidth = width * tileSize + borderWidth;
+
+  const isFirstWord = start === 0;
+  const isLastWord = start + width >= tilesWide;
+
+  if (isFirstWord || isLastWord) {
+    pixelWidth += borderWidth / 2;
+  }
+
+  return `${pixelWidth}px`;
+
+  // switch (side) {
+  //   case "top": {
+  //     let pixelWidth = width * tileSize + borderWidth;
+
+  //     const isFirstWord = start === 0;
+  //     const isLastWord = start + width >= tilesWide;
+
+  //     if (isFirstWord || isLastWord) {
+  //       pixelWidth += borderWidth / 2;
+  //     }
+
+  //     return `${pixelWidth}px`;
+  //   }
+
+  //   case "right":
+  //   case "left":
+  //   case "bottom":
+  //     return `${width * tileSize}px`;
+  // }
 }
 
 const Word = styled.span<{
@@ -101,10 +162,10 @@ const Word = styled.span<{
 
   display: block;
   box-sizing: border-box;
-  width: ${(props) => props.$width * tileSize}px;
+  width: ${(props) => calcWordWidth(props.$side, props.$start, props.$width)};
 
-  border-left: 2px solid black;
-  border-right: 2px solid black;
+  border-left: ${borderWidth}px solid black;
+  border-right: ${borderWidth}px solid black;
 
   text-align: center;
 
