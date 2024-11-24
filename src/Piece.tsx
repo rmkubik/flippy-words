@@ -411,10 +411,10 @@ export const usePieces = () => {
      */
     solutionPieces.forEach((solutionPiece) => {
       const piece = piecesData.find(
-        (solutionPiece) => solutionPiece.id === piece.id
+        (targetPiece) => solutionPiece.id === targetPiece.id
       );
 
-      if (!solutionPiece) return;
+      if (!piece) return;
 
       if (
         solutionPiece.location?.row === piece.location?.row &&
